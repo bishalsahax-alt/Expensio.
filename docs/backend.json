@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents a single expense record.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the expense entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User. (Relationship: User 1:N Expense)"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the expense."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the expense (e.g., Food, Transportation, Entertainment)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the expense."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp of when the expense was recorded, in ISO 8601 format.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "amount",
+        "category",
+        "description",
+        "timestamp"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "monthlyBudget": {
+          "type": "number",
+          "description": "The user's monthly budget."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile data.  The userId is obtained from Firebase Authentication.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, corresponding to their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/expenses/{expenseId}",
+        "definition": {
+          "entityName": "Expense",
+          "schema": {
+            "$ref": "#/backend/entities/Expense"
+          },
+          "description": "Stores expense records for a specific user. Expenses are owned by the user, achieving authorization independence through path-based ownership. The `userId` path segment inherently defines ownership, eliminating the need for additional `get()` calls in security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who owns the expense."
+            },
+            {
+              "name": "expenseId",
+              "description": "The unique identifier for the expense record."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to address the 'FirebaseError: Failed to get document because the client is offline' error by optimizing data access and ensuring data consistency, especially when the client is temporarily offline. The primary strategy is to use path-based ownership for user data and to avoid complex queries that can fail when offline.  The structure is designed with Authorization Independence via Path-Based Ownership: Expenses are stored as subcollections under the user's document (`/users/{userId}/expenses/{expenseId}`). This eliminates the need for `get()` calls in security rules to verify ownership, as the path itself inherently defines ownership. This ensures that expense data is directly associated with the user and accessible when offline, assuming the data has been cached. Homogeneous Security Posture: Each collection (users and expenses) has a clear and consistent security posture. All documents in `/users/{userId}/expenses/{expenseId}` are owned by the user identified by `{userId}`.  This makes security rules simple and efficient.  The app needs to cache data locally to be available offline. If using the Firebase SDK directly, enabling offline persistence will automatically cache the data. If using a library such as `react-query` or `swr` make sure the data is cached (for example `react-query` has a `cacheTime` option)."
+  }
+}

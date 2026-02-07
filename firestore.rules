@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user is authenticated and owns the document.
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Allow read and write access only to the user who owns the document.
+      allow read, write: if isOwner(userId);
+    }
+
+    // Rules for the 'expenses' subcollection
+    match /users/{userId}/expenses/{expenseId} {
+      // Allow the owner of the user document to list their own expenses.
+      allow list: if isOwner(userId);
+      
+      // Allow read, update, and delete access only to the owner.
+      allow read, update, delete: if isOwner(userId);
+
+      // Allow creating a new expense if the user is the owner and the
+      // 'userId' field in the new expense document matches their own UID.
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+    }
+  }
+}
