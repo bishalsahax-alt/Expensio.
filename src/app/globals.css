@@ -3,74 +3,75 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 94.1%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 174 45% 51%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 16 100% 70%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 174 45% 51%;
-    --chart-1: 174 45% 51%;
-    --chart-2: 16 100% 70%;
-    --chart-3: 197 37% 24%;
+  :root,
+  .dark {
+    /* Premium Midnight Slate Dark Theme (Default) */
+    --background: 222 47% 4%;
+    --foreground: 213 31% 91%;
+    
+    --card: 222 47% 6%;
+    --card-foreground: 213 31% 91%;
+    
+    --popover: 222 47% 5%;
+    --popover-foreground: 213 31% 91%;
+    
+    --primary: 250 89% 65%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 222 30% 12%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 222 30% 10%;
+    --muted-foreground: 215 16% 65%;
+    
+    --accent: 174 86% 57%;
+    --accent-foreground: 222 47% 4%;
+    
+    --destructive: 346 87% 43%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 222 30% 13%;
+    --input: 222 30% 13%;
+    --ring: 250 89% 65%;
+    
+    --radius: 0.75rem;
+
+    --chart-1: 250 89% 65%;
+    --chart-2: 174 86% 57%;
+    --chart-3: 16 100% 70%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 174 45% 51%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 16 100% 70%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 174 45% 51%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+  /* Premium Modern Light Theme */
+  .light {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    --primary: 250 84% 58%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    
+    --muted: 214 32% 94%;
+    --muted-foreground: 215 16% 45%;
+    
+    --accent: 174 86% 41%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 346 87% 53%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 250 84% 58%;
   }
 }
 
@@ -79,6 +80,75 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground selection:bg-primary/30 selection:text-white font-body;
+    background-attachment: fixed;
   }
+}
+
+/* Custom premium classes */
+@layer utilities {
+  .glass-card {
+    background: rgba(11, 15, 25, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-card:hover {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .grid-background {
+    background-image: 
+      linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .glowing-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.12;
+    z-index: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  .animate-gradient-shift {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* Custom animated transitions */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }

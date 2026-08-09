@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DollarSign } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { expenseCategories, type Expense } from '@/lib/types';
+import { expenseCategories, paymentMethods, recurringFrequencies, type Expense } from '@/lib/types';
 import {
   useFirestore,
   addDocumentNonBlocking,
@@ -44,6 +45,9 @@ const formSchema = z.object({
     required_error: 'Please select a category.',
   }),
   description: z.string().min(1, 'Description is required.'),
+  paymentMethod: z.enum(paymentMethods).optional(),
+  tag: z.string().optional(),
+  recurring: z.enum(recurringFrequencies).optional(),
 });
 
 type AddExpenseDialogProps = {
@@ -53,12 +57,15 @@ type AddExpenseDialogProps = {
   expense?: Expense | null;
 };
 
+import { useCurrency } from '@/context/currency-context';
+
 export default function AddExpenseDialog({
   isOpen,
   onClose,
   userId,
   expense,
 }: AddExpenseDialogProps) {
+  const { currency } = useCurrency();
   const firestore = useFirestore();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,6 +73,9 @@ export default function AddExpenseDialog({
       amount: undefined,
       category: undefined,
       description: '',
+      paymentMethod: 'Credit Card',
+      tag: '',
+      recurring: 'none',
     },
   });
 
@@ -76,12 +86,18 @@ export default function AddExpenseDialog({
           amount: expense.amount,
           category: expense.category,
           description: expense.description,
+          paymentMethod: expense.paymentMethod || 'Credit Card',
+          tag: expense.tag || '',
+          recurring: expense.recurring || 'none',
         });
       } else {
         form.reset({
-          amount: '' as any, // Use empty string for uncontrolled to controlled fix
+          amount: '' as any,
           category: undefined,
           description: '',
+          paymentMethod: 'Credit Card',
+          tag: '',
+          recurring: 'none',
         });
       }
     }
@@ -140,35 +156,41 @@ export default function AddExpenseDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-card border-border/40 rounded-2xl shadow-2xl">
         <DialogHeader>
-          <DialogTitle>{expense ? 'Edit Expense' : 'Add Expense'}</DialogTitle>
+          <DialogTitle className="font-headline text-lg font-bold text-foreground">
+            {expense ? 'Edit Transaction Details' : 'Record New Expense'}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-3">
             <FormField
               control={form.control}
               name="amount"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-muted-foreground">Amount ({currency.code} {currency.symbol})</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
-                      onChange={event =>
-                        field.onChange(
-                          event.target.value === ''
-                            ? ''
-                            : Number(event.target.value)
-                        )
-                      }
-                      value={field.value ?? ''}
-                    />
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-9 bg-muted/20 border-border/60 focus-visible:ring-primary/40 rounded-lg text-sm h-9"
+                        {...field}
+                        onChange={event =>
+                          field.onChange(
+                            event.target.value === ''
+                              ? ''
+                              : Number(event.target.value)
+                          )
+                        }
+                        value={field.value ?? ''}
+                      />
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px] text-destructive" />
                 </FormItem>
               )}
             />
@@ -176,27 +198,27 @@ export default function AddExpenseDialog({
               control={form.control}
               name="category"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-muted-foreground">Category</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                      <SelectTrigger className="bg-muted/20 border-border/60 focus:ring-primary/40 rounded-lg text-sm h-9 text-foreground">
+                        <SelectValue placeholder="Select transaction category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-popover border-border/40 max-h-[200px]">
                       {expenseCategories.map(cat => (
-                        <SelectItem key={cat} value={cat}>
+                        <SelectItem key={cat} value={cat} className="text-xs cursor-pointer">
                           {cat}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                  <FormMessage className="text-[10px] text-destructive" />
                 </FormItem>
               )}
             />
@@ -204,30 +226,86 @@ export default function AddExpenseDialog({
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-muted-foreground">Description</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input 
+                      placeholder="e.g. Weekly grocery stock or electricity bill"
+                      className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 rounded-lg text-sm h-9"
+                      {...field} 
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px] text-destructive" />
                 </FormItem>
               )}
             />
-            <DialogFooter>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold text-muted-foreground">Payment Method</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-muted/20 border-border/60 focus:ring-primary/40 rounded-lg text-xs h-9 text-foreground">
+                          <SelectValue placeholder="Payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border/40">
+                        {paymentMethods.map((pm) => (
+                          <SelectItem key={pm} value={pm} className="text-xs cursor-pointer">
+                            {pm}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tag"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold text-muted-foreground">Tag (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="#work, #travel"
+                        className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 rounded-lg text-xs h-9"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <DialogFooter className="pt-2 gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={form.formState.isSubmitting}
+                className="border-border/60 hover:bg-muted/50 rounded-lg text-xs h-9"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={form.formState.isSubmitting}
+                className="bg-primary hover:bg-primary/95 text-white rounded-lg text-xs h-9 px-5"
+              >
                 {form.formState.isSubmitting
                   ? 'Saving...'
                   : expense
                   ? 'Save Changes'
-                  : 'Add Expense'}
+                  : 'Add Transaction'}
               </Button>
             </DialogFooter>
           </form>
